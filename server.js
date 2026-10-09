@@ -12,7 +12,28 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
+
+// Updated CORS configuration to support Vercel deployment & local development
+const allowedOrigins = [
+  process.env.CLIENT_ORIGIN,
+  'https://shahzaib-khan-selfportfolio-react.vercel.app',
+  'http://localhost:5173'
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (e.g., Postman or mobile apps)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true
+  })
+);
+
 app.use(express.json({ limit: '50kb' }));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
